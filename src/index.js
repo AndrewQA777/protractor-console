@@ -60,7 +60,9 @@ module.exports = {
 
     return browser.manage().logs().get('browser')
       .then(result => {
-        result = result.filter(byLogLevel, config);
+        result = result.filter(byLogLevel, config).
+                        filter(byRegExp, config).
+                        filter(byLength, config);
 
         if (result.length === 0) {
           return;
@@ -85,6 +87,23 @@ function byLogLevel(log) {
   return getLogLevels.call(this)
     .map(name => name.toLowerCase())
     .indexOf(log.level.name.toLowerCase()) !== -1;
+}
+
+function byRegExp(log) {
+  if(this.regexToExclude) {
+    let re = new RegExp(this.regexToExclude);
+    return !re.test(log.message);
+  } else {
+    return true;
+  }
+}
+
+function byLength(log) {
+  if(this.maxMessageLength) {
+    return log.message.length < this.maxMessageLength;
+  } else {
+    return true;
+  }
 }
 
 function group(result, log) {
